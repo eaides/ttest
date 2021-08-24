@@ -1,3 +1,8 @@
+@php
+if (!isset($data[0]) || !is_array($data[0])) {
+    $data = [$data];
+}
+@endphp
 Input Data:
 <table border="1">
 <thead>
@@ -61,5 +66,7 @@ DB Data:
 </table>
 
 <br>
+Affected rows: <b>{{ $result }}</b> (returned by MySql - insert count as 1; on duplicate key updates count as 2)
+<br><br>
 
 <a href="\">Return</a>

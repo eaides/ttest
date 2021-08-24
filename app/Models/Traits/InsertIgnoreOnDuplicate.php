@@ -7,6 +7,52 @@ use Illuminate\Support\Facades\DB;
 trait InsertIgnoreOnDuplicate
 {
     /**
+     * 2 public functions receive array $data:
+     *
+     * public static function insertIgnore(array $data)
+     * public static function insertOnDuplicate(array $data)
+     *
+     * Example of $data:
+     *
+     * $data = [
+     *    [
+     *    'id' => 1,
+     *    'first_name' => 'Ernesto',
+     *    'last_name' => 'Aides',
+     *    'email' => 'eaides@hotmail.com',
+     *    'data' => 'data for 1',
+     *    ],
+     *    [
+     *    'first_name' => 'Ernesto',
+     *    'last_name' => 'Aides',
+     *    'email' => 'eaides@hotmail.com',
+     *    'data' => 'data for 2',
+     *    ],
+     *    [
+     *    'first_name' => 'Natalio',
+     *    'last_name' => 'Aides',
+     *    'email' => 'eaides@gmail.com',
+     *    'data' => 'data for 3',
+     *    ],
+     *    [
+     *    'first_name' => 'Other',
+     *    'last_name' => 'Last',
+     *    'email' => 'eaides@hotmail.com',
+     *    'data' => 'data for 4',
+     *    ],
+     * ];
+     *
+     * $data = [
+     *      'id' => 1,
+     *      'first_name' => 'Ernesto',
+     *      'last_name' => 'Aides',
+     *      'email' => 'eaides@hotmail.com',
+     *      'data' => 'data for 1',
+     * ];
+     *
+     */
+
+    /**
      * Static function for getting connection name
      * @return \Illuminate\Database\Connection
      */
@@ -38,10 +84,25 @@ trait InsertIgnoreOnDuplicate
     }
 
     /**
-     * Insert using mysql INSERT IGNORE INTO.
-     *
-     * pay attention, this is just a raw example, Query Builder already supports insertOrIgnore
      * @param array $data
+     */
+    protected static function normalizeData(array &$data)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+    }
+
+    /**
+     * @brief: Insert using mysql INSERT IGNORE INTO.
+     *
+     * pay attention:
+     *      1) works only with MySql DB
+     *      2) this is just an example, Query Builder already supports insertOrIgnore
+     *
+     * @param array $data
+     *
+     * @usage: $result = ModelName::insertIgnore($data);
      *
      * @return int
      */
@@ -53,15 +114,28 @@ trait InsertIgnoreOnDuplicate
             return false;
         }
 
-        $sql = self::buildInsertOnDuplicateSql($data, true);
-        $bindings = array_values($data);
-        return DB::affectingStatement($sql, $bindings);
+        self::normalizeData($data);
+
+        $return = 0;
+        foreach($data as $insert)
+        {
+            $sql = self::buildInsertOnDuplicateSql($insert, true);
+            $bindings = array_values($insert);
+            $return += DB::affectingStatement($sql, $bindings);
+        }
+
+        return $return;
     }
 
     /**
-     * Insert using mysql INSERT IGNORE INTO.
+     * @brief Insert using mysql INSERT IGNORE INTO.
+     *
+     * pay attention:
+     *      1) works only with MySql DB
      *
      * @param array $data
+     *
+     * @usage: $result = ModelName::insertOnDuplicate($data);
      *
      * @return int
      */
@@ -73,10 +147,16 @@ trait InsertIgnoreOnDuplicate
             return 0;
         }
 
-        $sql = self::buildInsertOnDuplicateSql($data, false);
+        self::normalizeData($data);
 
-        $bindings = array_merge(array_values($data),array_values($data));
-        return DB::affectingStatement($sql, $bindings);
+        $return = 0;
+        foreach($data as $insert) {
+            $sql = self::buildInsertOnDuplicateSql($insert, false);
+            $bindings = array_merge(array_values($insert),array_values($insert));
+            $return += DB::affectingStatement($sql, $bindings);
+        }
+
+        return $return;
     }
 
     /**

@@ -2,10 +2,11 @@
 
 namespace App\Helpers;
 
-
 class ResponseTime
 {
     /**
+     * @brief give response time (readable in seconds) for a given $url or error message
+     *
      * @param string $url
      * @return bool|string
      */
@@ -14,19 +15,19 @@ class ResponseTime
         if (!is_string($url)) return false;
         if (empty($url)) return false;
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-        curl_exec($ch);
-
-        if(!curl_errno($ch))
-        {
-            $info = curl_getinfo($ch);
-            return 'Took ' . $info['total_time'] . ' seconds to transfer a request to ' . $info['url'];
+        try {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+            curl_exec($ch);
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
-        else
+        $info = curl_getinfo($ch);
+        $error = curl_error($ch);
+        if($error)
         {
-            return (string)curl_error($ch);
+            return (string)$error;
         }
-        curl_close($ch);
+        return 'Took ' . $info['total_time'] . ' seconds to transfer a request to ' . $info['url'];
     }
 }

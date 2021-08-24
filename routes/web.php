@@ -33,6 +33,14 @@ $data = [
     ],
 ];
 
+//    $data = [
+//        'id' => 1,
+//        'first_name' => 'Ernesto',
+//        'last_name' => 'Aides',
+//        'email' => 'eaides@hotmail.com',
+//        'data' => 'data for 1',
+//    ];
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -50,29 +58,22 @@ Route::get('/', function () {
 
 Route::get('/testInsertIgnore', function () use ($data) {
     Test::truncate();
-    $result = 0;
-    foreach($data as $one)
-    {
-        $result += Test::insertIgnore($one);
-    }
+    $result = Test::insertIgnore($data);
     $db = Test::all();
     return view('dataResponse')
         ->with(compact('data'))
-        ->with(compact('db'));
+        ->with(compact('db'))
+        ->with(compact('result'));
 })->name('testIgnore');
 
 Route::get('/testInsertOnDuplicate', function () use ($data) {
     Test::truncate();
-    $result = 0;
-    foreach($data as $one)
-    {
-        $result += intval(Test::insertOnDuplicate($one));
-
-    }
+    $result = Test::insertOnDuplicate($data);
     $db = Test::all();
     return view('dataResponse')
         ->with(compact('data'))
-        ->with(compact('db'));
+        ->with(compact('db'))
+        ->with(compact('result'));
 })->name('testDuplicate');
 
 Route::post('/responseTime', function (Request $request) {
